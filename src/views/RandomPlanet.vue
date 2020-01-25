@@ -3,7 +3,16 @@
     <h1 v-if="loading">Loading...</h1>
     <div v-else>
       <div class="buttons">
-        <button @click="exoplanet=null;loading=true;getRandomPlanet">Get Next World</button>
+        <button
+          @click="
+            exoplanet = null;
+            exoDiv = null;
+            loading = true;
+            getRandomPlanet();
+          "
+        >
+          Get Next World
+        </button>
       </div>
       <h1>{{ exoplanet.pl_name }}</h1>
       <p>{{ exoplanet.pl_radj }}</p>
@@ -11,10 +20,14 @@
       {{ tooltip }}
       <div v-if="comparisonReady" class="display">
         <div class="planetary-box">
-          <div :style="exoDiv" class="planet"></div>
+          <div class="atmos">
+            <div :style="exoDiv" class="planet"></div>
+          </div>
         </div>
         <div class="planetary-box">
-          <div :style="comparatorDiv" class="planet" id="comparator"></div>
+          <div class="atmos">
+            <div :style="comparatorDiv" class="planet" id="comparator"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -28,12 +41,12 @@ export default {
   data() {
     return {
       exoplanet: null,
-      loading: true, 
+      loading: true,
       comparisonReady: false,
       exoDiv: null,
       comparatorDiv: null,
       shipVoyages: null,
-      tooltip: null,
+      tooltip: null
     };
   },
   async mounted() {
@@ -41,12 +54,43 @@ export default {
     this.calculateSizeComparison(this.exoplanet);
     this.createDisplayStyle(this.exoplanet);
     this.travelTimes();
+    // await this.getDataEnrichment();
+    // console.log(this.dataEnrichment);
+  },
+  computed: {
+    terrain() {
+      if (this.exoplanet) {
+        const jupiterRadiusInKM = 71492;
+        const planetRadj = this.exoplanet.pl_radj;
+        const exoplanetKMRadius = jupiterRadiusInKM * planetRadj;
+        // Kepler 138d is the smallest gaseous exoplanet.
+        const smallestGaseousPlanetRadiusKM = 10703.28;
+        // while Gliese 436 c is likely the largest rocky planet
+        const largestRockyPlanetRadiusKM = 9556.5;
+        if (exoplanetKMRadius <= largestRockyPlanetRadiusKM) {
+          return `Rocky`;
+        } else if (exoplanetKMRadius >= smallestGaseousPlanetRadiusKM) {
+          return `Gas`;
+        } else {
+          return `Unknown`;
+        }
+      }
+    }
   },
   methods: {
     async getRandomPlanet() {
-      const url = "http://localhost:9090/exoplanets/random";
-      const request = await axios.get(url);
-      const exoplanet = request.data.exoplanet;
+      const url = "http://localhost:5000";
+      const query = `
+      {
+        randomExoplanet { 
+          pl_name,
+          st_dist,
+          pl_radj
+        }
+      }
+      `
+      const request = await axios.post(url, { "query": query });
+      const exoplanet = request.data.data.randomExoplanet;
       this.exoplanet = exoplanet;
       this.loading = false;
     },
@@ -56,7 +100,8 @@ export default {
       // first we get the comparison to JUPITER's radius.
       const jupiterRadii = planet.pl_radj;
       if (!jupiterRadii) {
-        this.tooltip="There is insufficient data about the radius of this planet to make a projection. Check back later!";
+        this.tooltip =
+          "There is insufficient data about the radius of this planet to make a projection. Check back later!";
       }
       const jupiterRadiusInKM = 71492;
       const exoplanetRadius = jupiterRadiusInKM * jupiterRadii;
@@ -77,16 +122,11 @@ export default {
       let lowestDiff = 10000000000;
       for (let i = 0; i < planetaryRadii.length; i++) {
         const radiusDifference = Math.abs(exoplanetRadius - planetaryRadii[i]);
-        console.log(
-          `exoplanet has radius ${exoplanetRadius} where comparator has radius ${planetaryRadii[i]}`
-        );
         if (radiusDifference < lowestDiff) {
-          console.log(`This makes ${planetaryRadii[i]} the closest match`);
           lowestDiff = radiusDifference;
           closestSizeComparison = i;
         }
       }
-      console.log({ closestSizeComparison });
       const closestPlanet = function(closest) {
         switch (closest) {
           case 0:
@@ -214,6 +254,19 @@ export default {
           vm.exoplanet.st_dist
         )
       };
+    },
+    async getDataEnrichment() {
+      try {
+        if (this.exoplanet) {
+          const req = await axios.get(
+            `http://localhost:9090/expolanets/${this.exoplanet.pl_name}/enrichment`
+          );
+          this.dataEnrichment = req.data;
+        }
+      } catch (error) {
+        this.dataEnrichment = error.stack
+        return error;
+      }
     }
   }
 };
@@ -233,16 +286,16 @@ p {
   grid-template-areas: "planet planet";
 }
 .planet {
-  background: gray;
+  background: white;
+  background-size: cover;
+  box-shadow: inset 7px 0 20px 0px rgba(0, 0, 0, 1);
+  transform-style: preserve-3d;
 }
 
 .atmos {
-  width: 300px;
-  height: 300px;
-  position: relative;
-  margin: 3em auto;
+  display: inline-block;
   border-radius: 50%;
-  box-shadow: 0 0 15px 7.5px #95c6fe;
+  box-shadow: 0 0 15px 7.5px #95c6fea1;
 }
 
 .planetary-box {
