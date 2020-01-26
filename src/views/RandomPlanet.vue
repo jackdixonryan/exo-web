@@ -79,7 +79,7 @@ export default {
   },
   methods: {
     async getRandomPlanet() {
-      const url = "http://localhost:9090";
+      const url = "https://exo-online.herokuapp.com";
       const query = `
       {
         randomExoplanet { 
