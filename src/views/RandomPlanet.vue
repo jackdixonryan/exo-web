@@ -79,7 +79,7 @@ export default {
   },
   methods: {
     async getRandomPlanet() {
-      const url = "http://localhost:5000";
+      const url = "http://localhost:9090";
       const query = `
       {
         randomExoplanet { 
