@@ -18,7 +18,10 @@
       <p>{{ exoplanet.pl_radj }}</p>
       <p>{{ exoplanet.st_dist }} parsecs away</p>
       {{ tooltip }}
-      <size-display :planet="exoplanet" v-if="exoplanet"/>      
+      <size-display :planet="exoplanet" v-if="exoplanet && exoplanet.pl_radj"/>      
+      <div v-else>
+        There was insufficent radial data to open size comparison for {{exoplanet.pl_name}}. 
+      </div>
     </div>
   </div>
 </template>

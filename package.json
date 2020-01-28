@@ -9,6 +9,7 @@
     "test:e2e": "vue-cli-service test:e2e"
   },
   "dependencies": {
+    "animate.css": "^3.7.2",
     "axios": "^0.19.1",
     "cheerio": "^1.0.0-rc.3",
     "core-js": "^3.4.4",
