@@ -30,15 +30,17 @@
 /* } */
 /* } */
 button {
-  color: whitesmoke;
   transition: all 0.3s ease-in-out;
-  background-color: #303032;
   border: none;
   font-size: 1em;
   cursor: pointer;
   &:hover {
-    color: #21ce99;
     transition: opacity 0.3s ease-in-out;
+    background-color: #21ce99;
+    color: #303032;
   }
+  background-color: #182b27;
+  color: white;
+  border-radius: 5px;
 }
 </style>

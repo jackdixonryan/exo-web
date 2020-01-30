@@ -2,7 +2,7 @@
   <div id="main">
     <h1 v-if="loading">Loading...</h1>
     <div v-else>
-      <div class="buttons">
+      <!-- <div class="buttons">
         <button
           @click="
             exoplanet = null;
@@ -13,23 +13,47 @@
         >
           Get Next World
         </button>
+      </div>-->
+      <div id="main-info-box">
+        <h1>{{exoplanet.pl_name}}</h1>
+        <div id="information">
+          <p class="information-bit">
+            Size:
+            <span class="green" v-if="exoplanet.pl_radj">{{exoplanet.pl_radj}} Jupiter Radii</span>
+            <span class="green" v-else>
+              Unknown
+            </span>
+          </p>
+          <p class="information-bit">
+            Distance:
+            <span class="green">{{exoplanet.st_dist}} Parsecs</span>
+          </p>
+          <p class="information-bit">
+            Planets In System:
+            <span class="green">
+              {{exoplanet.pl_pnum}}
+              <span v-if="exoplanet.pl_num === 1">Planet</span>
+              <span v-else>Planets</span>
+            </span>
+          </p>
+          <p class="information-bit">
+            Mass:
+            <span class="green" v-if="exoplanet.pl_bmassj">{{exoplanet.pl_bmassj}} Jupiter Masses</span>
+            <span class="green" v-else>Unknown</span>
+          </p>
+          <p class="information-bit">
+            <span class="green" v-if="earthGs">{{earthGs}}</span>
+            <span class="green" v-else>Unknown</span> Earth Gravity
+          </p>
+          <p class="information-bit">{{exoplanet.dec}}</p>
+          <p class="information-bit"></p>
+          <p class="information-bit"></p>
+          <p class="information-bit"></p>
+          <p class="information-bit"></p>
+        </div>
       </div>
-      <h1>{{ exoplanet.pl_name }}</h1>
-      <p>{{ exoplanet.pl_radj }}</p>
-      <p>{{ exoplanet.st_dist }} parsecs away</p>
       {{ tooltip }}
-      <div v-if="comparisonReady" class="display">
-        <div class="planetary-box">
-          <div class="atmos">
-            <div :style="exoDiv" class="planet"></div>
-          </div>
-        </div>
-        <div class="planetary-box">
-          <div class="atmos">
-            <div :style="comparatorDiv" class="planet" id="comparator"></div>
-          </div>
-        </div>
-      </div>
+      <size-display :planet="exoplanet" v-if="exoplanet && exoplanet.pl_radj" />
     </div>
   </div>
 </template>
@@ -37,7 +61,13 @@
 <script>
 import axios from "axios";
 import ships from "../utils/ships";
+import gravity from "../utils/phys/gravity";
+import SizeDisplay from "../components/exoplanet/SizeDisplay";
+
 export default {
+  components: {
+    SizeDisplay
+  },
   data() {
     return {
       exoplanet: null,
@@ -51,8 +81,6 @@ export default {
   },
   async mounted() {
     await this.getRandomPlanet();
-    this.calculateSizeComparison(this.exoplanet);
-    this.createDisplayStyle(this.exoplanet);
     this.travelTimes();
     // await this.getDataEnrichment();
     // console.log(this.dataEnrichment);
@@ -75,6 +103,34 @@ export default {
           return `Unknown`;
         }
       }
+    },
+    earthGs() {
+      if (this.exoplanet && this.exoplanetMeterRadius && this.exoplanetMassKG) {
+        const earthGravity = gravity.calculateGravity(5.972e24, 6.371e6);
+        const exoplanetGravity = gravity.calculateGravity(
+          this.exoplanetMassKG,
+          this.exoplanetMeterRadius
+        );
+        const earthG = gravity.compareGravity(earthGravity, exoplanetGravity);
+        if (earthG > 1) {
+          return `${earthG.toFixed(2)} X`
+        }
+        return `${(earthG * 100).toFixed(2)}%`;
+      }
+    },
+    exoplanetMeterRadius() {
+      if (this.exoplanet) {
+        const jupiterRadiusInM = 6.6854e7;
+        const exoplanetRadius = jupiterRadiusInM * this.exoplanet.pl_radj;
+        return exoplanetRadius;
+      }
+    },
+    exoplanetMassKG() {
+      if (this.exoplanet) {
+        const jupiterMassInKG = 1.898e27;
+        const exoplanetMass = jupiterMassInKG * this.exoplanet.pl_bmassj;
+        return exoplanetMass;
+      }
     }
   },
   methods: {
@@ -83,157 +139,22 @@ export default {
       const query = `
       {
         randomExoplanet { 
-          pl_name,
-          st_dist,
+          pl_name
+          st_dist
           pl_radj
+          pl_pnum
+          pl_bmassj
+          dec
         }
       }
-      `
-      const request = await axios.post(url, { "query": query });
+      `;
+      const request = await axios.post(url, { query: query });
       const exoplanet = request.data.data.randomExoplanet;
       this.exoplanet = exoplanet;
       this.loading = false;
     },
-    calculateSizeComparison(planet) {
-      // take the mass of the exoplanet and compare it with familiar orbitals (our planets)
-
-      // first we get the comparison to JUPITER's radius.
-      const jupiterRadii = planet.pl_radj;
-      if (!jupiterRadii) {
-        this.tooltip =
-          "There is insufficient data about the radius of this planet to make a projection. Check back later!";
-      }
-      const jupiterRadiusInKM = 71492;
-      const exoplanetRadius = jupiterRadiusInKM * jupiterRadii;
-
-      // array of planetary radii in order of distance from the sun.
-      const planetaryRadii = [
-        2440,
-        6052,
-        6378,
-        3396,
-        71492,
-        60264,
-        25559,
-        24764
-      ];
-
-      let closestSizeComparison;
-      let lowestDiff = 10000000000;
-      for (let i = 0; i < planetaryRadii.length; i++) {
-        const radiusDifference = Math.abs(exoplanetRadius - planetaryRadii[i]);
-        if (radiusDifference < lowestDiff) {
-          lowestDiff = radiusDifference;
-          closestSizeComparison = i;
-        }
-      }
-      const closestPlanet = function(closest) {
-        switch (closest) {
-          case 0:
-            return "MERCURY";
-          case 1:
-            return "venus";
-          case 2:
-            return "earth";
-          case 3:
-            return "mars";
-          case 4:
-            return "Jupiter";
-          case 5:
-            return "saturn";
-          case 6:
-            return "uranus";
-          case 7:
-            return "Neptune";
-        }
-      };
-
-      const comparator = closestPlanet(closestSizeComparison);
-
-      console.log(
-        `We calculate that the closest sized planet to this exoplanet is ${comparator}, as this exoplanet is ${exoplanetRadius}km in radius and ${comparator} is ${planetaryRadii[closestSizeComparison]}km in radius..`
-      );
-    },
     calculateDistanceComparsion(planet) {},
     calculateGravityComparison() {},
-    createDisplayStyle(planet) {
-      // what we need is a more sophisticated check on planet
-      // starting with a predestined max width of 800px...
-
-      // if the planets jupiter radii is >1, it's the larger planet and needs to be the basis for the comparison.
-      const maxWidth = 200;
-      const jupiterRadii = planet.pl_radj;
-      const jupiterRadiusInKM = 71492;
-      const exoplanetRadius = jupiterRadiusInKM * jupiterRadii;
-      if (planet.pl_radj > 1) {
-        // just do this.
-        const exoplanetDisplay = maxWidth;
-        const jupiterDisplay = Math.floor(
-          (maxWidth * jupiterRadiusInKM) / exoplanetRadius
-        );
-        this.comparatorDiv = {
-          width: `${jupiterDisplay}px`,
-          height: `${jupiterDisplay}px`,
-          borderRadius: "50%",
-          backgroundImage:
-            "url('https://www.jpl.nasa.gov/spaceimages/images/largesize/PIA19643_hires.jpg')",
-          backgroundSize: "cover"
-        };
-        this.exoDiv = {
-          width: `${exoplanetDisplay}px`,
-          height: `${exoplanetDisplay}px`,
-          borderRadius: "50%"
-        };
-      } else {
-        // just do this.
-        const jupiterLargerDisplay = maxWidth;
-        const exoplanetSmallerDisplay = Math.floor(
-          (maxWidth * exoplanetRadius) / jupiterRadiusInKM
-        );
-
-        this.comparatorDiv = {
-          width: `${jupiterLargerDisplay}px`,
-          height: `${jupiterLargerDisplay}px`,
-          borderRadius: "50%",
-          backgroundImage:
-            "url('https://www.jpl.nasa.gov/spaceimages/images/largesize/PIA19643_hires.jpg')",
-          backgroundSize: "cover"
-        };
-
-        this.exoDiv = {
-          width: `${exoplanetSmallerDisplay}px`,
-          height: `${exoplanetSmallerDisplay}px`,
-          borderRadius: "50%"
-        };
-      }
-
-      this.comparisonReady = true;
-    },
-    changeComparator(comparator) {
-      if (comparator === "earth") {
-        const earthRadiusInKM = 6378;
-        const earthDisplay = Math.floor((800 * earthRadiusInKM) / 100000);
-        this.comparatorDiv = {
-          width: `${earthDisplay}px`,
-          height: `${earthDisplay}px`,
-          borderRadius: "50%",
-          backgroundImage:
-            "url('https://www.mapsinternational.com/pub/media/catalog/product/cache/892c3686b2fdb93e5f7202d739a3a7e6/s/a/satellite-map-of-the-world_wm00875.jpg')",
-          backgroundSize: "cover"
-        };
-      } else if (comparator === "jupiter") {
-        const jupiterRadiusInKM = 71492;
-        const jupiterDisplay = Math.floor((800 * jupiterRadiusInKM) / 100000);
-        this.comparatorDiv = {
-          width: `${jupiterDisplay}px`,
-          height: `${jupiterDisplay}px`,
-          borderRadius: "50%",
-          backgroundImage:
-            "url('https://www.jpl.nasa.gov/spaceimages/images/largesize/PIA19643_hires.jpg')",
-          backgroundFill: "cover"
-        };
-      }
-    },
     travelTimes() {
       const vm = this;
       this.shipVoyages = {
@@ -264,7 +185,7 @@ export default {
           this.dataEnrichment = req.data;
         }
       } catch (error) {
-        this.dataEnrichment = error.stack
+        this.dataEnrichment = error.stack;
         return error;
       }
     }
@@ -285,24 +206,26 @@ p {
   display: grid;
   grid-template-areas: "planet planet";
 }
-.planet {
-  background: white;
-  background-size: cover;
-  box-shadow: inset 7px 0 20px 0px rgba(0, 0, 0, 1);
-  transform-style: preserve-3d;
-}
-
-.atmos {
-  display: inline-block;
-  border-radius: 50%;
-  box-shadow: 0 0 15px 7.5px #95c6fea1;
-}
-
-.planetary-box {
-  display: inline-block;
-  width: 200px;
+#main-info-box {
   height: 200px;
-  border: 1px black solid;
-  padding: 2em;
+  width: 90%;
+  -webkit-box-shadow: 0 0 4px 1px rgba(0, 0, 0, 0.01),
+    0 3px 24px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 0 4px 1px rgba(0, 0, 0, 0.01), 0 3px 24px rgba(0, 0, 0, 0.6);
+  margin: 0 auto;
+  padding: 1em;
+}
+
+#information {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+#information p {
+  flex: 1 0 26%; /* explanation below */
+}
+
+.green {
+  color: #21ce99;
 }
 </style>
