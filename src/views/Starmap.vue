@@ -42,7 +42,7 @@ export default {
   methods: {
     async getPlanets() {
       try {
-        const url = "http://localhost:9090";
+        const url = "https://exo-online.herokuapp.com";
         const query = `
         {
           exoplanets { 
