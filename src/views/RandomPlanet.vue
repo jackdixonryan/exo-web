@@ -2,7 +2,7 @@
   <div id="main">
     <h1 v-if="loading">Loading...</h1>
     <div v-else>
-      <div class="buttons">
+      <!-- <div class="buttons">
         <button
           @click="
             exoplanet = null;
@@ -13,15 +13,47 @@
         >
           Get Next World
         </button>
+      </div>-->
+      <div id="main-info-box">
+        <h1>{{exoplanet.pl_name}}</h1>
+        <div id="information">
+          <p class="information-bit">
+            Size:
+            <span class="green" v-if="exoplanet.pl_radj">{{exoplanet.pl_radj}} Jupiter Radii</span>
+            <span class="green" v-else>
+              Unknown
+            </span>
+          </p>
+          <p class="information-bit">
+            Distance:
+            <span class="green">{{exoplanet.st_dist}} Parsecs</span>
+          </p>
+          <p class="information-bit">
+            Planets In System:
+            <span class="green">
+              {{exoplanet.pl_pnum}}
+              <span v-if="exoplanet.pl_num === 1">Planet</span>
+              <span v-else>Planets</span>
+            </span>
+          </p>
+          <p class="information-bit">
+            Mass:
+            <span class="green" v-if="exoplanet.pl_bmassj">{{exoplanet.pl_bmassj}} Jupiter Masses</span>
+            <span class="green" v-else>Unknown</span>
+          </p>
+          <p class="information-bit">
+            <span class="green" v-if="earthGs">{{earthGs}}</span>
+            <span class="green" v-else>Unknown</span> Earth Gravity
+          </p>
+          <p class="information-bit">{{exoplanet.dec}}</p>
+          <p class="information-bit"></p>
+          <p class="information-bit"></p>
+          <p class="information-bit"></p>
+          <p class="information-bit"></p>
+        </div>
       </div>
-      <h1>{{ exoplanet.pl_name }}</h1>
-      <p>{{ exoplanet.pl_radj }}</p>
-      <p>{{ exoplanet.st_dist }} parsecs away</p>
       {{ tooltip }}
-      <size-display :planet="exoplanet" v-if="exoplanet && exoplanet.pl_radj"/>      
-      <div v-else>
-        There was insufficent radial data to open size comparison for {{exoplanet.pl_name}}. 
-      </div>
+      <size-display :planet="exoplanet" v-if="exoplanet && exoplanet.pl_radj" />
     </div>
   </div>
 </template>
@@ -29,6 +61,7 @@
 <script>
 import axios from "axios";
 import ships from "../utils/ships";
+import gravity from "../utils/phys/gravity";
 import SizeDisplay from "../components/exoplanet/SizeDisplay";
 
 export default {
@@ -70,6 +103,34 @@ export default {
           return `Unknown`;
         }
       }
+    },
+    earthGs() {
+      if (this.exoplanet && this.exoplanetMeterRadius && this.exoplanetMassKG) {
+        const earthGravity = gravity.calculateGravity(5.972e24, 6.371e6);
+        const exoplanetGravity = gravity.calculateGravity(
+          this.exoplanetMassKG,
+          this.exoplanetMeterRadius
+        );
+        const earthG = gravity.compareGravity(earthGravity, exoplanetGravity);
+        if (earthG > 1) {
+          return `${earthG.toFixed(2)} X`
+        }
+        return `${(earthG * 100).toFixed(2)}%`;
+      }
+    },
+    exoplanetMeterRadius() {
+      if (this.exoplanet) {
+        const jupiterRadiusInM = 6.6854e7;
+        const exoplanetRadius = jupiterRadiusInM * this.exoplanet.pl_radj;
+        return exoplanetRadius;
+      }
+    },
+    exoplanetMassKG() {
+      if (this.exoplanet) {
+        const jupiterMassInKG = 1.898e27;
+        const exoplanetMass = jupiterMassInKG * this.exoplanet.pl_bmassj;
+        return exoplanetMass;
+      }
     }
   },
   methods: {
@@ -78,44 +139,22 @@ export default {
       const query = `
       {
         randomExoplanet { 
-          pl_name,
-          st_dist,
+          pl_name
+          st_dist
           pl_radj
+          pl_pnum
+          pl_bmassj
+          dec
         }
       }
-      `
-      const request = await axios.post(url, { "query": query });
+      `;
+      const request = await axios.post(url, { query: query });
       const exoplanet = request.data.data.randomExoplanet;
       this.exoplanet = exoplanet;
       this.loading = false;
     },
     calculateDistanceComparsion(planet) {},
     calculateGravityComparison() {},
-    changeComparator(comparator) {
-      if (comparator === "earth") {
-        const earthRadiusInKM = 6378;
-        const earthDisplay = Math.floor((800 * earthRadiusInKM) / 100000);
-        this.comparatorDiv = {
-          width: `${earthDisplay}px`,
-          height: `${earthDisplay}px`,
-          borderRadius: "50%",
-          backgroundImage:
-            "url('https://www.mapsinternational.com/pub/media/catalog/product/cache/892c3686b2fdb93e5f7202d739a3a7e6/s/a/satellite-map-of-the-world_wm00875.jpg')",
-          backgroundSize: "cover"
-        };
-      } else if (comparator === "jupiter") {
-        const jupiterRadiusInKM = 71492;
-        const jupiterDisplay = Math.floor((800 * jupiterRadiusInKM) / 100000);
-        this.comparatorDiv = {
-          width: `${jupiterDisplay}px`,
-          height: `${jupiterDisplay}px`,
-          borderRadius: "50%",
-          backgroundImage:
-            "url('https://www.jpl.nasa.gov/spaceimages/images/largesize/PIA19643_hires.jpg')",
-          backgroundFill: "cover"
-        };
-      }
-    },
     travelTimes() {
       const vm = this;
       this.shipVoyages = {
@@ -146,7 +185,7 @@ export default {
           this.dataEnrichment = req.data;
         }
       } catch (error) {
-        this.dataEnrichment = error.stack
+        this.dataEnrichment = error.stack;
         return error;
       }
     }
@@ -166,5 +205,27 @@ p {
   margin: 0 auto;
   display: grid;
   grid-template-areas: "planet planet";
+}
+#main-info-box {
+  height: 200px;
+  width: 90%;
+  -webkit-box-shadow: 0 0 4px 1px rgba(0, 0, 0, 0.01),
+    0 3px 24px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 0 4px 1px rgba(0, 0, 0, 0.01), 0 3px 24px rgba(0, 0, 0, 0.6);
+  margin: 0 auto;
+  padding: 1em;
+}
+
+#information {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+#information p {
+  flex: 1 0 26%; /* explanation below */
+}
+
+.green {
+  color: #21ce99;
 }
 </style>
