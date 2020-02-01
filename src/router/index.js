@@ -3,6 +3,7 @@ import VueRouter from 'vue-router'
 import Home from '../views/Home.vue'
 import RandomPlanet from '../views/RandomPlanet.vue'
 import Starmap from "../views/Starmap.vue";
+import Exoplanet from "../views/Exoplanet.vue";
 
 Vue.use(VueRouter)
 
@@ -29,6 +30,11 @@ const routes = [
     path: "/starmap",
     name: "Starmap",
     component: Starmap
+  },
+  {
+    path: "/exoplanets/planet/:exoplanet",
+    name: "Exoplanet",
+    component: Exoplanet
   }
 ]
 
