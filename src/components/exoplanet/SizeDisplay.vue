@@ -1,7 +1,7 @@
 <template>
   <div v-if="comparisonReady" class="size-comparison">
     <div class="planetary-box">
-      <div class="atmos">
+      <div :class="{ atmos: true, smaller: smaller==='exoplanet' }">
         <div :style="exoDiv" class="planet"></div>
       </div>
     </div>
@@ -13,36 +13,28 @@
         class="planet-selection animated fadeIn"
         id="mercury"
         v-if="selecting"
-      >
-        ☿
-      </button>
+      >☿</button>
       <div class="placeholder" v-show="!selecting"></div>
       <button
         @click="rerender('venus')"
         class="planet-selection animated fadeIn"
         id="venus"
         v-show="selecting"
-      >
-        ♀
-      </button>
+      >♀</button>
       <div class="placeholder" v-show="!selecting"></div>
       <button
         @click="rerender('earth')"
         class="planet-selection animated fadeIn"
         id="earth"
         v-show="selecting"
-      >
-        ♁
-      </button>
+      >♁</button>
       <div class="placeholder" v-show="!selecting"></div>
       <button
         @click="rerender('mars')"
         class="planet-selection animated fadeIn"
         id="mars"
         v-show="selecting"
-      >
-        ♂
-      </button>
+      >♂</button>
       <button class="planet-selection" id="none" @click="openSelectionMenu">
         <span v-if="selecting">&Chi;</span>
         <span v-else>&#9776;</span>
@@ -53,39 +45,31 @@
         class="planet-selection animated fadeIn"
         id="jupiter"
         v-show="selecting"
-      >
-        ♃
-      </button>
+      >♃</button>
       <div class="placeholder" v-show="!selecting"></div>
       <button
         @click="rerender('saturn')"
         class="planet-selection animated fadeIn"
         id="saturn"
         v-show="selecting"
-      >
-        ♄
-      </button>
+      >♄</button>
       <div class="placeholder" v-show="!selecting"></div>
       <button
         @click="rerender('uranus')"
         class="planet-selection animated fadeIn"
         id="uranus"
         v-show="selecting"
-      >
-        ⛢
-      </button>
+      >⛢</button>
       <div class="placeholder" v-show="!selecting"></div>
       <button
         @click="rerender('neptune')"
         class="planet-selection animated fadeIn"
         id="neptune"
         v-show="selecting"
-      >
-        ♆
-      </button>
+      >♆</button>
     </div>
     <div class="planetary-box">
-      <div class="atmos">
+      <div :class="{ atmos: true, smaller: smaller==='planet' }">
         <div :style="comparatorDiv" class="planet" id="comparator"></div>
       </div>
     </div>
@@ -157,7 +141,8 @@ export default {
           image:
             "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/5938ae9e-47de-424a-8836-f98e6658d37b/dcq2elx-fb271377-3761-47b9-8a83-3d937f4742f2.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcLzU5MzhhZTllLTQ3ZGUtNDI0YS04ODM2LWY5OGU2NjU4ZDM3YlwvZGNxMmVseC1mYjI3MTM3Ny0zNzYxLTQ3YjktOGE4My0zZDkzN2Y0NzQyZjIucG5nIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.doS0-VBiW1h6idhJNPcrMPzg7Haji3_q3ZEzbcbxdvE"
         }
-      }
+      },
+      smaller: null
     };
   },
   mounted() {
@@ -218,6 +203,7 @@ export default {
       const exoplanetRadius = jupiterRadiusInKM * jupiterRadii;
       console.log(exoplanetRadius);
       if (exoplanetRadius > comparatorPlanetRadius) {
+        this.smaller = "planet";
         // just do this.
         const exoplanetDisplay = maxWidth;
         const comparatorDisplay = Math.floor(
@@ -235,6 +221,7 @@ export default {
           borderRadius: "50%"
         };
       } else {
+        this.smaller = "exoplanet";
         // just do this.
         const comparatorLargerDisplay = maxWidth;
         const exoplanetSmallerDisplay = Math.floor(
@@ -304,17 +291,16 @@ export default {
       this.comparator = planet;
       this.render();
 
-      const buttons = document.getElementsByClassName("planet-selection")
+      const buttons = document.getElementsByClassName("planet-selection");
       for (let i = 0; i < buttons.length; i++) {
         buttons[i].style.backgroundColor = "#182b27";
-        buttons[i].style.color="white";
+        buttons[i].style.color = "white";
       }
 
       const button = document.getElementById(planet);
       button.style.backgroundColor = "#21ce99";
       button.style.color = "#303032";
-
-    },
+    }
   }
 };
 </script>
@@ -322,9 +308,11 @@ export default {
 <style lang="scss" scoped>
 .size-comparison {
   width: 90%;
+  padding: 2em;
   margin: 0 auto;
   display: grid;
   grid-template-areas: "exoplanet buttons comparator";
+  grid-gap: 2.2em;
 }
 
 .planet {
@@ -360,11 +348,18 @@ export default {
   box-shadow: 0 0 15px 7.5px #95c6fea1;
 }
 
+.smaller {
+  position: relative;
+  left: 50%;
+  top: 50%;
+  margin-top: -50px;
+  margin-left: -50px;
+}
+
 .planetary-box {
   display: inline-block;
   width: 200px;
   height: 200px;
-  padding: 2em;
 }
 
 .planet-selector {
@@ -375,7 +370,6 @@ export default {
     "saturn uranus neptune";
   height: 200px;
   width: 200px;
-  margin: 1.5em;
 }
 
 .planet-selection {

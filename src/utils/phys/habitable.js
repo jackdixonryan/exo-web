@@ -1,3 +1,4 @@
+// this technically works, might as well keep it even though habitable does not need it.
 function getLuminosity(stellarTemperature, stellarRadius) {
 
   const solRadius = 695700;
@@ -8,14 +9,6 @@ function getLuminosity(stellarTemperature, stellarRadius) {
   const solarLumens = radius * temp;
   return solarLumens
 }
-
-
-// for sol , should receive val 1
-console.log(getLuminosity(5778, 695700));
-
-
-// for betelgeuse, expect 140,000
-console.log(getLuminosity(3500, 617100000))
 
 // where mass is in solMass, distance in AUs, albedo (we will return to that), and greenhouse effect in Earth GE
 
@@ -114,7 +107,5 @@ function habitable(stellarMass, stellarDistance, bondAlbedo, greenHouseEffect) {
   return notes;
 };
 
-// for gliese 3470 B (mini neptune);
-console.log(habitable(0.54, 0.432, 29, 1));
-// console.log(habitable(1, 1, 29, 1));
+module.exports = habitable;
 				

@@ -55,6 +55,7 @@
       {{ tooltip }}
       <size-display :planet="exoplanet" v-if="exoplanet && exoplanet.pl_radj" />
     </div>
+    <habitability :planet="exoplanet" v-if="exoplanet"/>
   </div>
 </template>
 
@@ -63,10 +64,11 @@ import axios from "axios";
 import ships from "../utils/ships";
 import gravity from "../utils/phys/gravity";
 import SizeDisplay from "../components/exoplanet/SizeDisplay";
-
+import Habitability from "../components/exoplanet/Habitability";
 export default {
   components: {
-    SizeDisplay
+    SizeDisplay,
+    Habitability,
   },
   data() {
     return {
@@ -168,7 +170,10 @@ export default {
           pl_radj
           pl_pnum
           pl_bmassj
-          dec
+          pl_orbsmax
+          st_teff
+          st_rad
+          st_mass
         }
       }
       `;
