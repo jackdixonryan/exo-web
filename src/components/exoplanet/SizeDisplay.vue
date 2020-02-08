@@ -197,7 +197,7 @@ export default {
       // starting with a predestined max width of 800px...
 
       // if the planets jupiter radii is >1, it's the larger planet and needs to be the basis for the comparison.
-      const maxWidth = 200;
+      const maxWidth = 150;
       const jupiterRadii = planet.pl_radj;
       const jupiterRadiusInKM = 71492;
       const exoplanetRadius = jupiterRadiusInKM * jupiterRadii;
@@ -309,7 +309,6 @@ export default {
 .size-comparison {
   width: 90%;
   padding: 2em;
-  margin: 0 auto;
   display: grid;
   grid-template-areas: "exoplanet buttons comparator";
   grid-gap: 2.2em;
@@ -358,8 +357,8 @@ export default {
 
 .planetary-box {
   display: inline-block;
-  width: 200px;
-  height: 200px;
+  width: 150px;
+  height: 150px;
 }
 
 .planet-selector {
@@ -368,8 +367,9 @@ export default {
     "mercury venus earth"
     "mars none jupiter"
     "saturn uranus neptune";
-  height: 200px;
-  width: 200px;
+  grid-gap: 3px;
+  height: 150px;
+  width: 150px;
 }
 
 .planet-selection {

@@ -1,61 +1,52 @@
 <template>
   <div id="main">
     <h1 v-if="loading">Loading...</h1>
-    <div v-else>
-      <!-- <div class="buttons">
-        <button
-          @click="
-            exoplanet = null;
-            exoDiv = null;
-            loading = true;
-            getRandomPlanet();
-          "
-        >
-          Get Next World
-        </button>
-      </div>-->
-      <div id="main-info-box">
-        <h1>{{exoplanet.pl_name}}</h1>
-        <div id="information">
-          <p class="information-bit">
-            Size:
-            <span class="green" v-if="exoplanet.pl_radj">{{exoplanet.pl_radj}} Jupiter Radii</span>
-            <span class="green" v-else>Unknown</span>
-          </p>
-          <p class="information-bit">
-            Distance:
-            <span class="green">{{exoplanet.st_dist}} Parsecs</span>
-          </p>
-          <p class="information-bit">
-            Planets In System:
-            <span class="green">
-              {{exoplanet.pl_pnum}}
-              <span v-if="exoplanet.pl_num === 1">Planet</span>
-              <span v-else>Planets</span>
-            </span>
-          </p>
-          <p class="information-bit">
-            Mass:
-            <span
-              class="green"
-              v-if="exoplanet.pl_bmassj"
-            >{{exoplanet.pl_bmassj}} Jupiter Masses</span>
-            <span class="green" v-else>Unknown</span>
-          </p>
-          <p class="information-bit">
-            <span class="green" v-if="earthGs">{{earthGs}}</span>
-            <span class="green" v-else>Unknown</span> Earth Gravity
-          </p>
-          <p class="information-bit">
-            Habitable:
-            <span class="green">{{habitable}}</span>
-          </p>
+    <div v-else class="main-exo-content">
+      <!-- nifty timeline component -->
+      <scroll />
+      <div class="content">
+        <div id="main-info-box">
+          <h1>{{exoplanet.pl_name}}</h1>
+          <div id="information">
+            <p class="information-bit">
+              Size:
+              <span class="green" v-if="exoplanet.pl_radj">{{exoplanet.pl_radj}} Jupiter Radii</span>
+              <span class="green" v-else>Unknown</span>
+            </p>
+            <p class="information-bit">
+              Distance:
+              <span class="green">{{exoplanet.st_dist}} Parsecs</span>
+            </p>
+            <p class="information-bit">
+              Planets In System:
+              <span class="green">
+                {{exoplanet.pl_pnum}}
+                <span v-if="exoplanet.pl_num === 1">Planet</span>
+                <span v-else>Planets</span>
+              </span>
+            </p>
+            <p class="information-bit">
+              Mass:
+              <span
+                class="green"
+                v-if="exoplanet.pl_bmassj"
+              >{{exoplanet.pl_bmassj}} Jupiter Masses</span>
+              <span class="green" v-else>Unknown</span>
+            </p>
+            <p class="information-bit">
+              <span class="green" v-if="earthGs">{{earthGs}}</span>
+              <span class="green" v-else>Unknown</span> Earth Gravity
+            </p>
+            <p class="information-bit">
+              Habitable:
+              <span class="green">{{habitable}}</span>
+            </p>
+          </div>
         </div>
+        <size-display :planet="exoplanet" v-if="exoplanet && exoplanet.pl_radj" />
+        <habitability :planet="exoplanet" v-if="exoplanet" />
       </div>
-      {{ tooltip }}
-      <size-display :planet="exoplanet" v-if="exoplanet && exoplanet.pl_radj" />
     </div>
-    <habitability :planet="exoplanet" v-if="exoplanet"/>
   </div>
 </template>
 
@@ -65,10 +56,12 @@ import ships from "../utils/ships";
 import gravity from "../utils/phys/gravity";
 import SizeDisplay from "../components/exoplanet/SizeDisplay";
 import Habitability from "../components/exoplanet/Habitability";
+import Scroll from "../components/exoplanet/Scroll";
 export default {
   components: {
     SizeDisplay,
     Habitability,
+    Scroll
   },
   data() {
     return {
@@ -148,8 +141,10 @@ export default {
       }
 
       if (this.terrain === "Gas") {
-        caveat = "(Likely Gas Planet)"
-      } 
+        caveat = "(Likely Gas Planet)";
+      } else {
+        caveat = "(Unknown Terrain)";
+      }
       if (isHabitable === true) {
         return `Possibly ` + caveat;
       } else {
@@ -231,7 +226,7 @@ p {
   color: white;
 }
 .display {
-  width: 80%;
+  width: 90%;
   margin: 0 auto;
   display: grid;
   grid-template-areas: "planet planet";
@@ -242,7 +237,6 @@ p {
   -webkit-box-shadow: 0 0 4px 1px rgba(0, 0, 0, 0.01),
     0 3px 24px rgba(0, 0, 0, 0.6);
   box-shadow: 0 0 4px 1px rgba(0, 0, 0, 0.01), 0 3px 24px rgba(0, 0, 0, 0.6);
-  margin: 0 auto;
   padding: 1em;
 }
 
@@ -257,5 +251,17 @@ p {
 
 .green {
   color: #21ce99;
+}
+
+.main-exo-content {
+  display: grid;
+  grid-template-areas: "scroll content";
+  grid-gap: 2em;
+  .content {
+    grid-area: content;
+  }
+  scroll {
+    grid-area: scroll;
+  }
 }
 </style>
